@@ -5,7 +5,6 @@ class Soccer:
     '''
     Actions [0 : Left, 1 : Up, 2 : Right, 3 : Down, 4 : Stand]
     '''
-
     def __init__(self, h=4, w=5, pA=[3, 2], pB=[1, 1], goalPositions=[1, 2], ballOwner=0, drawProbability=0):
         self.h = h
         self.w = w
@@ -86,9 +85,9 @@ class Soccer:
         for y in range(self.h)[::-1]:
             for x in range(self.w):
                 if ([x, y] == positions[0]).all():
-                    board += 'A' if ballOwner is 0 else 'a'
+                    board += 'A' if ballOwner == 0 else 'a'
                 elif ([x, y] == positions[1]).all():
-                    board += 'B' if ballOwner is 1 else 'b'
+                    board += 'B' if ballOwner == 1 else 'b'
                 else:
                     board += '-'
             board += '\n'
@@ -97,10 +96,10 @@ class Soccer:
 
 
 if __name__ == '__main__':
-    s = soccer()
+    s = Soccer()
     s.draw()
     actions = [[0, 1], [0, 4], [1, 3], [1, 0], [1, 0]]
     actions = [[0, 4], [0, 4], [0, 4], [1, 4], [0, 4]]
     for action in actions:
-        print s.play(*action)
+        print(s.play(*action))
         s.draw()

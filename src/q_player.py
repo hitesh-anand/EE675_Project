@@ -1,6 +1,5 @@
 import numpy as np
 
-
 class QPlayer:
 
     def __init__(self, numStates, numActions, decay, expl, gamma):
