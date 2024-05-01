@@ -1,4 +1,4 @@
-from soccer import soccer_env
+from soccer import Soccer
 from neural_net import Q_network
 import random
 import numpy as np
@@ -16,7 +16,7 @@ def epsilon_greedy(Q_network,state,epsilon):
         return Q_values[0][1]
 
 def main():
-    env = soccer_env.SoccerEnv()
+    env = Soccer(drawProbability=0.01)
     player_A = Q_network()
     player_B = Q_network()
     epochs = 1000
@@ -30,7 +30,7 @@ def main():
         # for agent a
         action_A = epsilon_greedy(player_A,np.concatenate((current_state_A,BallOwner),axis=0),epsilon)
         action_B = epsilon_greedy(player_B,np.concatenate((current_state_B,BallOwner),axis=0),epsilon)
-        next_state_A,next_state_B,next_BallOwner,reward_A,reward_B = env.move(action_A,action_B)
+        next_state_A,next_state_B,next_BallOwner,reward_A,reward_B = env._move(action_A,action_B)
         player_A.replay_memory.append((np.concatenate((current_state_A,BallOwner),axis=0),action_A,reward_A,np.concatenate((next_state_A,next_BallOwner),axis=0)))
         player_B.replay_memory.append((np.concatenate((current_state_B,BallOwner),axis=0),action_B,reward_B,np.concatenate((next_state_B,next_BallOwner),axis=0)))
         current_state_A = next_state_A
