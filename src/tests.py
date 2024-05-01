@@ -108,7 +108,7 @@ def testSoccer(iterations):
     boardW = 5
     numStates = (boardW * boardH) * (boardW * boardH - 1) * 2
     numActions = 5
-    drawProbability = 0.005
+    drawProbability = 0.001
     decay = 10**(-2. / iterations * 0.05)
 
     ### CHOOSE PLAYER_A TYPE
