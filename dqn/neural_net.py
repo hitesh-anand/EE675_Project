@@ -42,8 +42,8 @@ class Q_network:
         seed = random.randint(0, 1000)
         self.target_network = self.build_model(seed)
         self.online_network = self.build_model(seed)
-        self.replay_memory = deque(max_memory=max_cap)
-    def build_model(seed):
+        self.replay_memory = deque()
+    def build_model(self,seed):
         model = Net(seed=seed)
         return model
     
