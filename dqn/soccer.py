@@ -28,7 +28,7 @@ class Soccer:
 
         self.positions = self.initPositions.copy()
         self.ballOwner = ballOwner
-        return self.positions[0]/ self.w, self.positions[1] / self.h, self.ballOwner
+        return self.positions[0] / self.w, self.positions[1] / self.h, self.ballOwner
 
     def play(self, actionA, actionB):
         if np.random.rand() < self.drawProbability:

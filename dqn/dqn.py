@@ -2,7 +2,7 @@ from soccer import Soccer
 from neural_net import Q_network
 import random
 import numpy as np
-
+import matplotlib.pyplot as plt
 def epsilon_greedy(Q_network,state,epsilon):
     if random.random() < epsilon:
         return random.randint(0,5)
@@ -20,12 +20,14 @@ def main():
     player_A = Q_network()
     player_B = Q_network()
     num_episodes = 1000
-    epochs = 1000
+    epochs = 100000
     frequency = 50
     epsilon=0.1
     stochastic_param=20
     gamma=0.9
     fill_memory = 100
+    wins_A = []
+    wins_B = []
     for episode in num_episodes:
         current_state_A,current_state_B,BallOwner = env.reset()
         for epoch in range(epochs):
@@ -63,9 +65,22 @@ def main():
                         target = reward + gamma*max([player_B.target_network.forward(np.concatenate((next_state,i),axis=0)) for i in range(6)])
                     input_ls.append(np.concatenate((state,action),axis=0))
                     label_ls.append(target)
-                player_B.online_network.train(input_ls,label_ls)
+                # player_B.online_network.train(input_ls,label_ls)
             if epoch%frequency==0:
                 player_A.target_network.load_state_dict(player_A.online_network.state_dict())
                 player_B.target_network.load_state_dict(player_B.online_network.state_dict())
             if done_env:
+                if reward_A == 1:
+                    wins_A.append(reward_A)
+                    wins_B.append(0)
+                elif reward_B == 1:
+                    wins_A.append(0)
+                    wins_B.append(reward_B)
+                else:
+                    wins_A.append(0)
+                    wins_B.append(0)
                 break 
+    plt.plot(np.cumsum(np.array(wins_A)),label='Player A')
+    plt.plot(np.cumsum(np.array(wins_B)),label='Player B')
+    plt.legend()
+    plt.show()
