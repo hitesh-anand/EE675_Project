@@ -16,7 +16,7 @@ class Soccer:
         #self.reward = 0
         self.rewards = np.array([0, 0])
 
-    def restart(self, pA=None, pB=None, ballOwner=None):
+    def reset(self, pA=None, pB=None, ballOwner=None):
         if pA is not None:
             self.initPositions[0] = pA
 
@@ -28,6 +28,7 @@ class Soccer:
 
         self.positions = self.initPositions.copy()
         self.ballOwner = ballOwner
+        return self.positions[0]/ self.w, self.positions[1] / self.h, self.ballOwner
 
     def play(self, actionA, actionB):
         if np.random.rand() < self.drawProbability:
@@ -61,11 +62,11 @@ class Soccer:
             # reward = -2*( 1 - self.isInGoal(*newPosition)) + 1
             # self.rewards = np.array([reward, -reward ])
             reward = -2 * (1 - self.isInGoal(*newPosition)) + 1
-            return (self.positions[0] / self.w, self.positions[1] / self.h, self.ballOwner, reward, -reward, True)
+            return self.positions[0] / self.w, self.positions[1] / self.h, self.ballOwner, reward, -reward, True
         # If it's in board
         elif self.isInBoard(*newPosition):
             self.positions[player] = newPosition
-        return (self.positions[0] / self.w, self.positions[1]/ self.h, self.ballOwner, reward, -reward, False)
+        return self.positions[0] / self.w, self.positions[1]/ self.h, self.ballOwner, reward, -reward, False
 
     def actionToMove(self, action):
         switcher = {
