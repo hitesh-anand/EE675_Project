@@ -13,8 +13,10 @@ class Soccer:
         self.initPositions = np.array([pA, pB])
         self.ballOwner = ballOwner
         self.drawProbability = drawProbability
+        #self.reward = 0
+        self.rewards = np.array([0, 0])
 
-    def restart(self, pA=None, pB=None, ballOwner=None):
+    def reset(self, pA=None, pB=None, ballOwner=None):
         if pA is not None:
             self.initPositions[0] = pA
 
@@ -26,6 +28,7 @@ class Soccer:
 
         self.positions = self.initPositions.copy()
         self.ballOwner = ballOwner
+        return self.positions[0]/ self.w, self.positions[1] / self.h, self.ballOwner
 
     def play(self, actionA, actionB):
         if np.random.rand() < self.drawProbability:
@@ -36,21 +39,34 @@ class Soccer:
         if (m1 >= 0):
             return m1
         return self.move(1 - first, actions[1 - first])
+    
+    def _move(self, actionA, actionB):
+        if np.random.rand() < self.drawProbability:
+            return -2
+        first = self.choosePlayer()
+        actions = [actionA, actionB]
+        m1 = self.move(first, actions[first])
+        if (m1[0] >= 0):
+            return m1
+        return self.move(1 - first, actions[1 - first])
 
     def move(self, player, action):
         opponent = 1 - player
         newPosition = self.positions[player] + self.actionToMove(action)
-
+        #self.rewards = np.array([0, 0])
         # If it's opponent position
         if (newPosition == self.positions[opponent]).all():
             self.ballOwner = opponent
         # If it's the goal
         elif self.ballOwner is player and self.isInGoal(*newPosition) >= 0:
-            return 1 - self.isInGoal(*newPosition)
+            # reward = -2*( 1 - self.isInGoal(*newPosition)) + 1
+            # self.rewards = np.array([reward, -reward ])
+            reward = -2 * (1 - self.isInGoal(*newPosition)) + 1
+            return self.positions[0] / self.w, self.positions[1] / self.h, self.ballOwner, reward, -reward, True
         # If it's in board
         elif self.isInBoard(*newPosition):
             self.positions[player] = newPosition
-        return -1
+        return self.positions[0] / self.w, self.positions[1]/ self.h, self.ballOwner, reward, -reward, False
 
     def actionToMove(self, action):
         switcher = {
