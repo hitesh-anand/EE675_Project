@@ -6,9 +6,9 @@ from collections import deque
 import random
 
 class Net(nn.Module):
-    def __init__(self,seed):
+    def __init__(self,seed,input_dimension=6):
         super(Net, self).__init__()
-        self.fc1 = nn.Linear(4, 10)  
+        self.fc1 = nn.Linear(input_dimension, 10)  
         self.fc2 = nn.Linear(10, 5)  
         self.fc3 = nn.Linear(5, 1) 
         torch.manual_seed(seed)
