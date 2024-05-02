@@ -1,16 +1,18 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from q_player import QPlayer
 from random_player import RandomPlayer
 from minimaxq_player import MinimaxQPlayer
 from soccer import Soccer
+from wolfphc_player import WolfPHCPlayer
+import sys
 
 class Tester:
 
-    def __init__(self, game, playerA=None, playerB=None):
+    def __init__(self, game, policy, playerA=None, playerB=None):
         self.game = game
         self.playerA = playerA
         self.playerB = playerB
+        self.policy= policy
 
     def resultToReward(self, result, actionA=None, actionB=None):
         if result >= 0:
@@ -39,14 +41,23 @@ class Tester:
 
         plt.plot((wins == 0).cumsum())
         plt.plot((wins == 1).cumsum())
+        plt.xlabel('Episodes')
+        plt.ylabel('No of wins')
+        if policy== 'wolfphc':
+            plt.title('WoLF-PHC vs Random')
+        else:
+            plt.title('Minimax Q Learning vs Random') 
+        # plt.title('')
         plt.legend(('WinsA', 'WinsB'), loc=(0.6, 0.8))
+        
+        plt.savefig(f'plots/{policy}_vs_random.png')
         plt.show()
 
 
 class SoccerTester(Tester):
 
-    def __init__(self, game):
-        Tester.__init__(self, game)
+    def __init__(self, game, policy):
+        Tester.__init__(self, game, policy)
 
     def boardToState(self):
         game = self.game
@@ -103,7 +114,7 @@ def testGame(playerA, playerB, gameTester, iterations):
     return wins
 
 
-def testSoccer(iterations):
+def testSoccer(iterations, policy='wolfphc'):
     boardH = 4
     boardW = 5
     numStates = (boardW * boardH) * (boardW * boardH - 1) * 2
@@ -113,20 +124,27 @@ def testSoccer(iterations):
 
     ### CHOOSE PLAYER_A TYPE
     # playerA = RandomPlayer(numActions)
-    playerA = MinimaxQPlayer(numStates, numActions, numActions, decay=decay, expl=0.2, gamma=1-drawProbability)
-    # playerA = QPlayer(numStates, numActions, decay=decay, expl=0.2, gamma=1-drawProbability)
+    if policy == 'wolfphc':
+        print('Initialized Player A with WoLF-PHC')
+        playerA = WolfPHCPlayer(numStates, numActions, numActions, decay=decay, expl=0.2, gamma=1-drawProbability)
+    else:
+        print('Initialized Player A with Minimax Q learning')
+        playerA = MinimaxQPlayer(numStates, numActions, numActions, decay=decay, expl=0.2, gamma=1-drawProbability)
+    #  playerA = WolfPHCPlayer(numStates, numActions, decay=decay, expl=0.2, gamma=1-drawProbability)
     # playerA = np.load('SavedPlayers/minimaxQ_SoccerA_100000.npy', allow_pickle=True).item()
 
     ### CHOOSE PLAYER_B TYPE
+    print('Initialized Player B with random policy')
     playerB = RandomPlayer(numActions)
-    # playerB = MinimaxQPlayer(numStates, numActions, numActions, decay=decay, expl=0.2, gamma=1-drawProbability)
     # playerB = QPlayer(numStates, numActions, decay=decay, expl=0.2, gamma=1-drawProbability)
-    # playerB = QPlayer(numStates, numActions, decay=decay, expl=0.2, gamma=1-drawProbability)
+    # playrB = MinimaxWolfPHCPlayer(numStates, numActions, numActions, decay=decay, expl=0.2, gamma=1-drawProbability)
+    # playerB = WolfPHCPlayer(numStates, numActions, decay=decay, expl=0.2, gamma=1-drawProbability)
+    # playerB = WolfPHCPlayer(numStates, numActions, decay=decay, expl=0.2, gamma=1-drawProbability)
     # playerB = np.load('SavedPlayers/Q_SoccerB_100000.npy').item()
 
     ### INSTANTIATE GAME AND TESTER
     game = Soccer(boardH, boardW, drawProbability=drawProbability)
-    tester = SoccerTester(game)
+    tester = SoccerTester(game, policy)
 
     ### RUN TEST
     wins = testGame(playerA, playerB, tester, iterations)
@@ -135,71 +153,30 @@ def testSoccer(iterations):
     tester.plotPolicy(playerA)
     # tester.plotPolicy(playerB)
     tester.plotResult(wins)
+    print('----------------------------testSoccer finished----------------------------')
 
     # np.save("SoccerA_10000", playerA)
     # np.save("SoccerB_10000", playerB)
 
 
-def testSoccerPerformance():
-    boardH, boardW = 4, 5
-    numStates = (boardW * boardH) * (boardW * boardH - 1) * 2
-    numActions = 5
-    drawProbability = 0.005
-    # drawProbability = 0.01
-    # drawProbability = 0.1
-
-    ### INSTANTIATE GAME
-    game = Soccer(boardH, boardW, drawProbability=drawProbability)
-
-    print("AIM : EVALUATE OUR MINIMAX Q 'PLAYER A' TRAINED OVER 100.000 ITERATIONS")
-    print("METHOD : MAKE IT FIGHT AGAINST A DETERMINISTIC PLAYER\n \
-        AGAINST THERE EXIST A DETERMINISTIC POLICY THAT ALWAYS WINS")
-
-    print("\n=======================================================")
-    print("STEP 1: CREATE A DETERMINISTIC 'PLAYER B' TO FIGHT WITH")
-
-    ### CHOOSE PLAYER_B AS Q LEARNER
-    playerB = QPlayer(numStates, numActions, decay=1-1e-4, expl=0.3, gamma=1-drawProbability)
-
-    ### TRAIN IT AGAINST ANOTHER Q LEARNER
-    print("\n1.1 - TRAIN OUR 'PLAYER B' (Q LEARNER) AGAINST ANOTHER Q LEARNER - 5000 games")
-    playerA1 = QPlayer(numStates, numActions, decay=1-1e-4, expl=0.5, gamma=1-drawProbability)
-    tester = SoccerTester(game)
-    wins = testGame(playerA1, playerB, tester, 5000)
-
-    ### TRAIN A Q LEARNER TO BEAT IT
-    print("\n1.2 - TRAIN ANOTHER Q LEARNER TO BEAT 'PLAYER B' - 10000 games")
-    print("('PLAYER B' is not learning anymore)")
-    playerB.learning = False
-    playerA2 = QPlayer(numStates, numActions, decay=1-1e-4, expl=0.3, gamma=1-drawProbability)
-    wins = testGame(playerA2, playerB, tester, 10000)
-    tester.plotResult(wins)
-
-    ### CHECK THIS Q LEARNER
-    print("\n1.3 - CHECK THIS Q LEARNER ALWAYS BEAT 'PLAYER B' - 1000 games")
-    print("(This step is facultative -- 'PLAYER B' should be always losing)")
-    print("(Note: If it is not the case, relaunch program)")
-    playerA2.learning = False
-    wins = testGame(playerA2, playerB, tester, 1000)
-    tester.plotResult(wins)
-
-    # ### MAKE FIGHT ! PLAYER A vs PLAYER B
-    # print("\n\n======================================================")
-    # print("STEP 2: MAKE PLAYER 'A' FIGHT 'PLAYER B' - 10000 games")
-    # playerA3 = np.load('SavedPlayers/minimaxQ_SoccerA_100000.npy').item()
-    # playerA3.learning = False
-    # wins = testGame(playerA3, playerB, tester, 10000)
-    # tester.plotResult(wins)
-
-    # v = playerA2.pi == 1
-    # prod = sum(playerA2.pi[v] * playerA3.pi[v])
-    # print('\nApproximate percentage of correct actions : %0.1f%%' % (100 * prod / np.sum(v)))
-
-
 if __name__ == '__main__':
 
+    policy = 'wolfphc'
+    if(len(sys.argv) > 1):
+        if(sys.argv[1] == 'minimaxql'):
+            policy = 'minimaxql'
+            print('-----------------Running Minimax Q learning vs Random---------------------')
+        else:
+            print('-------------------Running WoLF PHC vs Random--------------------------------')
+    else:
+        print('-------------------Running WoLF PHC vs Random--------------------------------')
+
+    
+
+
+
     ### RUN TESTS
-    testSoccer(5600)
+    testSoccer(5000, policy)
     ### RUN PERFORMANCE TESTS
     # testSoccerPerformance()
 

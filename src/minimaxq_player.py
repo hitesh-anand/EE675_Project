@@ -15,33 +15,45 @@ class MinimaxQPlayer:
         self.numStates = numStates
         self.numActionsA = numActionsA
         self.numActionsB = numActionsB
+        self.num_actions = numActionsA
         self.learning = True
 
-    def chooseAction(self, state, restrict=None):
-        if self.learning and np.random.rand() < self.expl:
-            action = np.random.randint(self.numActionsA)
-        else:
-            action = self.weightedActionChoice(state)
-        return action
 
-    def weightedActionChoice(self, state):
-        rand = np.random.rand()
-        cumSumProb = np.cumsum(self.pi[state])
-        action = 0
-        while rand > cumSumProb[action]:
-            action += 1
-        return action
+    def chooseAction(self, state, restrict=None):
+        '''
+            Given the current state, choose action for the agent
+            as per the epsilon-greedy policy
+        '''
+        epsilon = self.expl
+        p = np.random.choice(2, 1, [epsilon, 1-epsilon])
+        if p == 0:
+            # choose random action
+            a = np.random.choice(self.num_actions, 1, p=[1/self.num_actions]*self.num_actions)
+        else:
+           
+            a = np.random.choice(self.num_actions, 1, p=self.pi[state])
+        return a[0]
+
+        
+
+    
 
     def getReward(self, initialState, finalState, actions, reward, restrictActions=None):
-        if not self.learning:
-            return
-        actionA, actionB = actions
-        self.Q[initialState, actionA, actionB] = (1 - self.alpha) * self.Q[initialState, actionA, actionB] + \
-            self.alpha * (reward + self.gamma * self.V[finalState])
-        self.V[initialState] = self.updatePolicy(initialState)  # EQUIVALENT TO : min(np.sum(self.Q[initialState].T * self.pi[initialState], axis=1))
-        self.alpha *= self.decay
+        '''
+            Given the current and next states, actions taken and the reward, update the 
+            Q and Value functions for the agent
+        '''
+        if self.learning:
+            actionA, actionB = actions
+            self.Q[initialState, actionA, actionB] += self.alpha * (reward + self.gamma * self.V[finalState] - self.Q[initialState, actionA, actionB])
+            self.V[initialState] = self.updatePolicy(initialState)
+            self.alpha *= self.decay
 
     def updatePolicy(self, state, retry=False):
+        '''
+            Given the current state, implements Linear Programming solution for
+            updating the Value function for the current state
+        '''
         c = np.zeros(self.numActionsA + 1)
         c[0] = -1
         A_ub = np.ones((self.numActionsB, self.numActionsA + 1))
@@ -54,12 +66,12 @@ class MinimaxQPlayer:
 
         res = linprog(c, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq, b_eq=b_eq, bounds=bounds)
 
-        if res.success:
+        # If solved successfully, update the policy
+        if res.success and np.all(res.x[1:] >= 0):
             self.pi[state] = res.x[1:]
         elif not retry:
             return self.updatePolicy(state, retry=True)
         else:
-            print("Alert : %s" % res.message)
             return self.V[state]
 
         return res.x[0]
@@ -69,12 +81,3 @@ class MinimaxQPlayer:
             print("Actions %d : %f" % (i, self.pi[state, i]))
 
 
-if __name__ == '__main__':
-
-    def testUpdatePolicy():
-        m = MinimaxQPlayer(1, 2, 2, 1e-4, 0.2, 0.9)
-        m.Q[0] = [[0, 1], [1, 0.5]]
-        m.updatePolicy(0)
-        print(m.pi)
-
-    testUpdatePolicy()
