@@ -257,12 +257,12 @@ for episode in range(num_episodes):
             if episode%10==0:
                 print("Episode number when done: ",episode)
             if episode%100==0:
-                print("Episode number when done: ",episode)
-                print("A wins and A goal: ",cnt_A_win_A_goal)
-                print("B wins and B goal: ",cnt_B_win_B_goal)
-                print("A wins and B goal: ",cnt_A_win_B_goal)
-                print("B wins and A goal: ",cnt_B_win_A_goal)
-                print("Draws: ",cnt_draw)
+                # print("Episode number when done: ",episode)
+                # print("A wins and A goal: ",cnt_A_win_A_goal)
+                # print("B wins and B goal: ",cnt_B_win_B_goal)
+                # print("A wins and B goal: ",cnt_A_win_B_goal)
+                # print("B wins and A goal: ",cnt_B_win_A_goal)
+                # print("Draws: ",cnt_draw)
                 cnt_A_win_A_goal = 0
                 cnt_B_win_B_goal = 0
                 cnt_A_win_B_goal = 0
